@@ -98,14 +98,11 @@ void InputReader::ApplyCommands([[maybe_unused]] transport_catalogue::TransportC
         if (command.command == "Stop") {
             geo::Coordinates coords = {ParseCoordinates(command.description)};
             catalogue.AddStop(command.id, coords);
-            continue;
         }
+    }
+    for (auto& command : commands_) {
         if (command.command == "Bus") {
-            std::vector<std::string> stops;
-            for (std::string_view stop : ParseRoute(command.description)) {
-                stops.push_back(std::string(stop));
-            }
-            catalogue.AddBus(command.id, stops);
+            catalogue.AddBus(command.id, ParseRoute(command.description));
         }
     }
 }

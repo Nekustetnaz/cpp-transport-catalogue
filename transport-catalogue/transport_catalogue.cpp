@@ -1,6 +1,6 @@
+#include <algorithm>
 #include <string>
 #include <string_view>
-#include <set>
 #include <unordered_set>
 #include <vector>
 
@@ -10,13 +10,17 @@ using namespace std;
 
 namespace transport_catalogue {
 
-void TransportCatalogue::AddStop(string name, geo::Coordinates coordinates) {
+void TransportCatalogue::AddStop(const string& name, const geo::Coordinates coordinates) {
     all_stops_.push_back({move(name), move(coordinates)});
     name_to_stop_[all_stops_.back().name] = &all_stops_.back();
 }
 
-void TransportCatalogue::AddBus(string name, vector<string> stops) {
-    all_buses_.push_back({move(name), move(stops)});
+void TransportCatalogue::AddBus(const string& name, const vector<string_view> stops) {
+    vector<string> stops_to_string;
+    for (string_view stop : stops) {
+        stops_to_string.push_back(string(stop));
+    }
+    all_buses_.push_back({move(name), move(stops_to_string)});
     name_to_bus_[all_buses_.back().name] = &all_buses_.back();
 
     for (const string& stop : all_buses_.back().stops) {
@@ -24,19 +28,22 @@ void TransportCatalogue::AddBus(string name, vector<string> stops) {
     }
 }
 
-const TransportCatalogue::Bus* TransportCatalogue::FindBus(const string_view name) const {
-    return name_to_bus_.count(name) > 0 ? name_to_bus_.at(name) : nullptr;
+const Bus* TransportCatalogue::FindBus(const string_view name) const {
+    auto bus_iter = name_to_bus_.find(name);
+    return bus_iter != name_to_bus_.end() ? bus_iter->second : nullptr;
 }
 
-const TransportCatalogue::Stop* TransportCatalogue::FindStop(const string_view name) const {
-    return name_to_stop_.count(name) > 0 ? name_to_stop_.at(name) : nullptr;
+const Stop* TransportCatalogue::FindStop(const string_view name) const {
+    auto stop_iter = name_to_stop_.find(name);
+    return stop_iter != name_to_stop_.end() ? stop_iter->second : nullptr;
 }
 
-const set<string_view> TransportCatalogue::GetBusesToStop(const string_view stop_name) const {
-    return stop_to_buses_.count(stop_name) > 0 ? stop_to_buses_.at(stop_name) : set<string_view>();
+const unordered_set<string_view>* TransportCatalogue::GetBusesToStop(const string_view stop_name) const {
+    auto stop_iter = stop_to_buses_.find(stop_name);
+    return stop_iter != stop_to_buses_.end() ? &stop_iter->second : nullptr;
 }
 
-const TransportCatalogue::RouteInfo TransportCatalogue::GetRouteInfo(const TransportCatalogue::Bus* bus) const {
+const RouteInfo TransportCatalogue::GetRouteInfo(const Bus* bus) const {
     RouteInfo route;
     unordered_set<string_view> unique_stops;
     geo::Coordinates current_stop_coordinates;

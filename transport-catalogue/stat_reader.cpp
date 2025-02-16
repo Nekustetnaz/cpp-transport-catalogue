@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
-#include <set>
+#include <unordered_set>
+#include <vector>
 
 #include "stat_reader.h"
 
@@ -14,7 +16,7 @@ void PrintBus (const TransportCatalogue& tansport_catalogue, std::string_view re
         output << request << ": not found"s << std::endl;
         return;
     }
-    const TransportCatalogue::RouteInfo route = tansport_catalogue.GetRouteInfo(bus);
+    const RouteInfo route = tansport_catalogue.GetRouteInfo(bus);
     output << request << ": "s << route.stops_number << " stops on route, "s 
         << route.unique_stops_number << " unique stops, "s 
         << route.distance << " route length"s << std::endl;
@@ -26,13 +28,15 @@ void PrintStop (const TransportCatalogue& tansport_catalogue, std::string_view r
         output << request << ": not found"s << std::endl;
         return;
     }
-    const std::set<std::string_view>& buses = tansport_catalogue.GetBusesToStop(command_id);
-    if (buses.empty()) {
+    const std::unordered_set<std::string_view>* buses = tansport_catalogue.GetBusesToStop(command_id);
+    if (buses == nullptr) {
         output << request << ": no buses"s << std::endl;
         return;
     }
+    std::vector<std::string_view> buses_vector(buses->begin(), buses->end());
+    std::sort(buses_vector.begin(), buses_vector.end());
     output << request << ": buses"s;
-    for (const std::string_view bus : buses) {
+    for (const std::string_view bus : buses_vector) {
         output << " "s << bus;
     }
     output << std::endl;
