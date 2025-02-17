@@ -10,14 +10,14 @@
 
 namespace transport_catalogue {
 
-struct Bus {
-    std::string name;
-    std::vector<std::string> stops;
-};
-
 struct Stop {
     std::string name;
     geo::Coordinates coordinates;
+};
+
+struct Bus {
+    std::string name;
+    std::vector<std::string_view> stops;
 };
 
 struct RouteInfo {
@@ -32,7 +32,7 @@ public:
 	void AddBus(const std::string& name, const std::vector<std::string_view> stops);
 	const Bus* FindBus(const std::string_view name) const;
 	const Stop* FindStop(const std::string_view name) const;
-	const std::unordered_set<std::string_view>* GetBusesToStop(const std::string_view stop_name) const;
+    const std::unordered_set<std::string_view>& GetBusesToStop(const std::string_view stop_name) const;
 	const RouteInfo GetRouteInfo(const Bus* bus) const;
 
 private:

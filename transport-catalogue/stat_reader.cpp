@@ -28,12 +28,12 @@ void PrintStop (const TransportCatalogue& tansport_catalogue, std::string_view r
         output << request << ": not found"s << std::endl;
         return;
     }
-    const std::unordered_set<std::string_view>* buses = tansport_catalogue.GetBusesToStop(command_id);
-    if (buses == nullptr) {
+    const std::unordered_set<std::string_view>& buses = tansport_catalogue.GetBusesToStop(command_id);
+    if (buses.empty()) {
         output << request << ": no buses"s << std::endl;
         return;
     }
-    std::vector<std::string_view> buses_vector(buses->begin(), buses->end());
+    std::vector<std::string_view> buses_vector(buses.begin(), buses.end());
     std::sort(buses_vector.begin(), buses_vector.end());
     output << request << ": buses"s;
     for (const std::string_view bus : buses_vector) {
