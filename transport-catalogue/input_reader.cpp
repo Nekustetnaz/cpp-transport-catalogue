@@ -2,6 +2,7 @@
 #include <cassert>
 #include <iterator>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "input_reader.h"
@@ -17,9 +18,11 @@ geo::Coordinates ParseCoordinates(std::string_view str) {
     }
 
     auto not_space2 = str.find_first_not_of(' ', comma + 1);
+    auto comma2 = str.find(',', comma + 1);
 
     double lat = std::stod(std::string(str.substr(not_space, comma - not_space)));
-    double lng = std::stod(std::string(str.substr(not_space2)));
+    double lng = comma2 == str.npos ? std::stod(std::string(str.substr(not_space2))) 
+                                    : std::stod(std::string(str.substr(not_space2, comma2 - not_space2)));
 
     return {lat, lng};
 }
@@ -90,6 +93,24 @@ void InputReader::ParseLine(std::string_view line) {
     }
 }
 
+std::unordered_map<std::string_view, int> ParseDistance(std::string_view str) {
+    std::unordered_map<std::string_view, int> length_to_stops;
+    
+    auto comma1 = str.find(',');
+    auto comma2 = str.find(',', comma1 + 1);
+    if (comma2 == str.npos) {
+        return length_to_stops;
+    }
+
+    auto lengths = Split(str.substr(comma2 + 1), ',');
+    for (std::string_view length : lengths) {
+        auto letter_m = length.find('m');
+        length_to_stops.insert({length.substr(letter_m + 5), std::stoi(std::string(length.substr(0, letter_m)))});
+    }
+
+    return length_to_stops;
+}
+
 void InputReader::ApplyCommands([[maybe_unused]] transport_catalogue::TransportCatalogue& catalogue) const {
     if (commands_.empty()) {
         return;
@@ -98,6 +119,15 @@ void InputReader::ApplyCommands([[maybe_unused]] transport_catalogue::TransportC
         if (command.command == "Stop") {
             geo::Coordinates coords = {ParseCoordinates(command.description)};
             catalogue.AddStop(command.id, coords);
+        }
+    }
+    for (auto& command : commands_) {
+        if (command.command == "Stop") {
+            const std::unordered_map<std::string_view, int>& length_to_stops = ParseDistance(command.description);
+            if (length_to_stops.empty()) {
+                continue;
+            }
+            catalogue.AddDistance(command.id, length_to_stops);
         }
     }
     for (auto& command : commands_) {

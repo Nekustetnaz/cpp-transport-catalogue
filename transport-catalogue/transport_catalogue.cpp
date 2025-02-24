@@ -15,6 +15,13 @@ void TransportCatalogue::AddStop(const string& name, const geo::Coordinates coor
     name_to_stop_[all_stops_.back().name] = &all_stops_.back();
 }
 
+
+void TransportCatalogue::AddDistance(const string_view name, const unordered_map<string_view, int>& length_to_stops) {
+    for (const auto [stop, distance] : length_to_stops) {
+        stop_route_length_.insert({{name_to_stop_.at(name), name_to_stop_.at(stop)}, distance});
+    }
+}
+
 void TransportCatalogue::AddBus(const string& name, const vector<string_view> stops) {
     vector<string_view> stops_to_string;
     for (const string_view stop : stops) {
@@ -48,19 +55,30 @@ const RouteInfo TransportCatalogue::GetRouteInfo(const Bus* bus) const {
     RouteInfo route;
     unordered_set<string_view> unique_stops;
     geo::Coordinates current_stop_coordinates;
+    string_view current_stop;
     bool is_first_stop = true;
     for (const string_view stop : bus->stops) {
         ++route.stops_number;
         unique_stops.insert(stop);
         if (is_first_stop) {
             current_stop_coordinates = name_to_stop_.at(stop)->coordinates;
+            current_stop = stop;
             is_first_stop = false;
             continue;
         }
         route.distance += geo::ComputeDistance(name_to_stop_.at(stop)->coordinates, current_stop_coordinates);
+        auto route_length_iter = stop_route_length_.find({name_to_stop_.at(current_stop), name_to_stop_.at(stop)});
+        auto route_length_iter2 = stop_route_length_.find({name_to_stop_.at(stop), name_to_stop_.at(current_stop)});
+        if (route_length_iter != stop_route_length_.end()) {
+            route.route_length += stop_route_length_.at({name_to_stop_.at(current_stop), name_to_stop_.at(stop)});
+        } else if (route_length_iter2 != stop_route_length_.end()) {
+            route.route_length += stop_route_length_.at({name_to_stop_.at(stop), name_to_stop_.at(current_stop)});
+        }
         current_stop_coordinates = name_to_stop_.at(stop)->coordinates;
+        current_stop = stop;
     }
     route.unique_stops_number = unique_stops.size();
+    route.curvature = route.route_length / route.distance; 
     return route;
 }
 

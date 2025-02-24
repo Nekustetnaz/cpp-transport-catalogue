@@ -18,8 +18,8 @@ void PrintBus (const TransportCatalogue& tansport_catalogue, std::string_view re
     }
     const RouteInfo route = tansport_catalogue.GetRouteInfo(bus);
     output << request << ": "s << route.stops_number << " stops on route, "s 
-        << route.unique_stops_number << " unique stops, "s 
-        << route.distance << " route length"s << std::endl;
+        << route.unique_stops_number << " unique stops, "s << route.route_length << " route length, "s
+        << route.curvature << " curvature" << std::endl;
 }
 
 void PrintStop (const TransportCatalogue& tansport_catalogue, std::string_view request, std::ostream& output, 
