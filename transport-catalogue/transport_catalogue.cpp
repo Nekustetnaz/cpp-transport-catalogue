@@ -68,10 +68,9 @@ const RouteInfo TransportCatalogue::GetRouteInfo(const Bus* bus) const {
         }
         route.distance += geo::ComputeDistance(name_to_stop_.at(stop)->coordinates, current_stop_coordinates);
         auto route_length_iter = stop_route_length_.find({name_to_stop_.at(current_stop), name_to_stop_.at(stop)});
-        auto route_length_iter2 = stop_route_length_.find({name_to_stop_.at(stop), name_to_stop_.at(current_stop)});
         if (route_length_iter != stop_route_length_.end()) {
             route.route_length += stop_route_length_.at({name_to_stop_.at(current_stop), name_to_stop_.at(stop)});
-        } else if (route_length_iter2 != stop_route_length_.end()) {
+        } else {
             route.route_length += stop_route_length_.at({name_to_stop_.at(stop), name_to_stop_.at(current_stop)});
         }
         current_stop_coordinates = name_to_stop_.at(stop)->coordinates;
