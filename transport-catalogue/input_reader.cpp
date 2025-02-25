@@ -127,7 +127,9 @@ void InputReader::ApplyCommands([[maybe_unused]] transport_catalogue::TransportC
             if (length_to_stops.empty()) {
                 continue;
             }
-            catalogue.AddDistance(command.id, length_to_stops);
+            for (const auto [stop, length] : length_to_stops) {
+                catalogue.SetDistance(command.id, stop, length);
+            }
         }
     }
     for (auto& command : commands_) {

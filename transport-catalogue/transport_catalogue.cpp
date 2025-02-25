@@ -16,13 +16,11 @@ void TransportCatalogue::AddStop(const string& name, const geo::Coordinates coor
 }
 
 
-void TransportCatalogue::AddDistance(const string_view name, const unordered_map<string_view, int>& length_to_stops) {
-    for (const auto [stop, distance] : length_to_stops) {
-        stop_route_length_.insert({{name_to_stop_.at(name), name_to_stop_.at(stop)}, distance});
-    }
+void TransportCatalogue::SetDistance(const string_view stop1, const string_view stop2, int length) {
+    stop_route_length_.insert({{name_to_stop_.at(stop1), name_to_stop_.at(stop2)}, length});
 }
 
-void TransportCatalogue::AddBus(const string& name, const vector<string_view> stops) {
+void TransportCatalogue::AddBus(const string& name, const vector<string_view>& stops) {
     vector<string_view> stops_to_string;
     for (const string_view stop : stops) {
         stops_to_string.push_back(name_to_stop_.at(stop)->name);
@@ -69,7 +67,7 @@ const RouteInfo TransportCatalogue::GetRouteInfo(const Bus* bus) const {
         route.distance += geo::ComputeDistance(name_to_stop_.at(stop)->coordinates, current_stop_coordinates);
         auto route_length_iter = stop_route_length_.find({name_to_stop_.at(current_stop), name_to_stop_.at(stop)});
         if (route_length_iter != stop_route_length_.end()) {
-            route.route_length += stop_route_length_.at({name_to_stop_.at(current_stop), name_to_stop_.at(stop)});
+            route.route_length += route_length_iter->second;
         } else {
             route.route_length += stop_route_length_.at({name_to_stop_.at(stop), name_to_stop_.at(current_stop)});
         }

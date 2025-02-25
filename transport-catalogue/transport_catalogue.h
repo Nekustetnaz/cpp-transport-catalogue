@@ -39,8 +39,8 @@ public:
     };
 
     void AddStop(const std::string& name, const geo::Coordinates coordinates);
-    void AddDistance(const std::string_view name, const std::unordered_map<std::string_view, int>& length_to_stops);
-    void AddBus(const std::string& name, const std::vector<std::string_view> stops);
+    void SetDistance(const std::string_view stop1, const std::string_view stop2, int length);
+    void AddBus(const std::string& name, const std::vector<std::string_view>& stops);
     const Bus* FindBus(const std::string_view name) const;
     const Stop* FindStop(const std::string_view name) const;
     const std::unordered_set<std::string_view>& GetBusesToStop(const std::string_view stop_name) const;
