@@ -1,10 +1,10 @@
+#include "transport_catalogue.h"
+
 #include <algorithm>
 #include <string>
 #include <string_view>
 #include <unordered_set>
 #include <vector>
-
-#include "transport_catalogue.h"
 
 using namespace std;
 
@@ -20,16 +20,16 @@ void TransportCatalogue::SetDistance(const string_view stop1, const string_view 
     stop_route_length_.insert({{name_to_stop_.at(stop1), name_to_stop_.at(stop2)}, length});
 }
 
-void TransportCatalogue::AddBus(const string& name, const vector<string_view>& stops) {
-    vector<string_view> stops_to_string;
+void TransportCatalogue::AddBus(const string& name, const vector<string_view>& stops, bool is_roundtrip) {
+    vector<const Stop*> bus_stops;
     for (const string_view stop : stops) {
-        stops_to_string.push_back(name_to_stop_.at(stop)->name);
+        bus_stops.push_back(name_to_stop_.at(stop));
     }
-    all_buses_.push_back({move(name), move(stops_to_string)});
+    all_buses_.push_back({move(name), move(bus_stops), is_roundtrip});
     name_to_bus_[all_buses_.back().name] = &all_buses_.back();
 
-    for (const string_view stop : all_buses_.back().stops) {
-        stop_to_buses_[stop].insert(all_buses_.back().name);
+    for (const Stop* stop : all_buses_.back().stops) {
+        stop_to_buses_[stop->name].insert(all_buses_.back().name);
     }
 }
 
@@ -55,28 +55,36 @@ const RouteInfo TransportCatalogue::GetRouteInfo(const Bus* bus) const {
     geo::Coordinates current_stop_coordinates;
     string_view current_stop;
     bool is_first_stop = true;
-    for (const string_view stop : bus->stops) {
+    for (const Stop* stop : bus->stops) {
         ++route.stops_number;
-        unique_stops.insert(stop);
+        unique_stops.insert(stop->name);
         if (is_first_stop) {
-            current_stop_coordinates = name_to_stop_.at(stop)->coordinates;
-            current_stop = stop;
+            current_stop_coordinates = stop->coordinates;
+            current_stop = stop->name;
             is_first_stop = false;
             continue;
         }
-        route.distance += geo::ComputeDistance(name_to_stop_.at(stop)->coordinates, current_stop_coordinates);
-        auto route_length_iter = stop_route_length_.find({name_to_stop_.at(current_stop), name_to_stop_.at(stop)});
+        route.distance += geo::ComputeDistance(stop->coordinates, current_stop_coordinates);
+        auto route_length_iter = stop_route_length_.find({name_to_stop_.at(current_stop), stop});
         if (route_length_iter != stop_route_length_.end()) {
             route.route_length += route_length_iter->second;
         } else {
-            route.route_length += stop_route_length_.at({name_to_stop_.at(stop), name_to_stop_.at(current_stop)});
+            route.route_length += stop_route_length_.at({stop, name_to_stop_.at(current_stop)});
         }
-        current_stop_coordinates = name_to_stop_.at(stop)->coordinates;
-        current_stop = stop;
+        current_stop_coordinates = stop->coordinates;
+        current_stop = stop->name;
     }
     route.unique_stops_number = unique_stops.size();
     route.curvature = route.route_length / route.distance; 
     return route;
+}
+
+const unordered_map<string_view, const Stop*>& TransportCatalogue::GetAllStops() const {
+    return name_to_stop_;
+}
+
+const unordered_map<string_view, const Bus*>& TransportCatalogue::GetAllBuses() const {
+    return name_to_bus_;
 }
 
 }
