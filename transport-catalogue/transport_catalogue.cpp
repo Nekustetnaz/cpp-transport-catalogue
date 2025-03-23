@@ -6,9 +6,10 @@
 #include <unordered_set>
 #include <vector>
 
-using namespace std;
-
 namespace transport_catalogue {
+
+using namespace std;
+using namespace domain;
 
 void TransportCatalogue::AddStop(const string& name, const geo::Coordinates coordinates) {
     all_stops_.push_back({move(name), move(coordinates)});

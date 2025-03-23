@@ -80,10 +80,10 @@ struct RenderSettings {
     double line_width = 0.0;
     double stop_radius = 0.0;
     int bus_label_font_size = 0;
-    svg::Point bus_label_offset = { 0.0, 0.0 };
+    svg::Point bus_label_offset = {0.0, 0.0};
     int stop_label_font_size = 0;
-    svg::Point stop_label_offset = { 0.0, 0.0 };
-    svg::Color underlayer_color = { svg::NoneColor };
+    svg::Point stop_label_offset = {0.0, 0.0};
+    svg::Color underlayer_color = {svg::NoneColor};
     double underlayer_width = 0.0;
     std::vector<svg::Color> color_palette {};
 };
@@ -94,15 +94,12 @@ public:
         : render_settings_(render_settings)
     {}
     
-    std::vector<svg::Polyline> GetRouteLines(const std::map<std::string_view, const transport_catalogue::Bus*>& buses, const SphereProjector& sp) const;
-
-    std::vector<svg::Text> GetBusName(const std::map<std::string_view, const transport_catalogue::Bus*>& buses, const SphereProjector& sp) const;
-
-    std::vector<svg::Circle> GetStopMarks(std::map<std::string_view, const transport_catalogue::Stop*>& stops, const SphereProjector& sp) const;
+    std::vector<svg::Polyline> GetRouteLines(const std::map<std::string_view, const domain::Bus*>& buses, const SphereProjector& sp_proj) const;
+    std::vector<svg::Text> GetBusName(const std::map<std::string_view, const domain::Bus*>& buses, const SphereProjector& sp_proj) const;
+    std::vector<svg::Circle> GetStopMarks(std::map<std::string_view, const domain::Stop*>& stops, const SphereProjector& sp_proj) const;
+    std::vector<svg::Text> GetStopNames(std::map<std::string_view, const domain::Stop*>& stops, const SphereProjector& sp_proj) const;
     
-    std::vector<svg::Text> GetStopNames(std::map<std::string_view, const transport_catalogue::Stop*>& stops, const SphereProjector& sp) const;
-    
-    svg::Document GetSVG(const std::vector<const transport_catalogue::Stop*>& stops, const std::map<std::string_view, const transport_catalogue::Bus*>& buses) const;
+    svg::Document GetSVG(const std::vector<const domain::Stop*>& stops, const std::map<std::string_view, const domain::Bus*>& buses) const;
     
 private:
     const RenderSettings render_settings_;

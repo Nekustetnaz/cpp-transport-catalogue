@@ -2,7 +2,6 @@
 #include "request_handler.h"
 
 int main() {
-
     transport_catalogue::TransportCatalogue catalogue;
     JsonReader requests(std::cin);
     requests.PopulateCatalogue(catalogue);
@@ -11,7 +10,7 @@ int main() {
     const auto& render_settings = requests.GetRenderSettings().AsMap();
     const auto& renderer = requests.FillRenderSettings(render_settings);
 
-    RequestHandler rh(renderer, catalogue);
+    RequestHandler handler(renderer, catalogue);
 
-    rh.ProcessRequests(stat_requests);
+    handler.ProcessRequests(stat_requests);
 }

@@ -4,6 +4,8 @@
 #include <map>
 #include <sstream>
 
+using namespace std;
+
 void RequestHandler::ProcessRequests(const json::Node& stat_requests) const {
     json::Array result;
     for (auto& request : stat_requests.AsArray()) {
@@ -19,67 +21,67 @@ void RequestHandler::ProcessRequests(const json::Node& stat_requests) const {
             result.push_back(PrintMap(request_map).AsMap());
         }
     }
-    json::Print(json::Document{ result }, std::cout);
+    json::Print(json::Document{result}, cout);
 }
 
 const json::Node RequestHandler::PrintBus(const json::Dict& request_map) const {
     json::Dict result;
     result["request_id"] = request_map.at("id").AsInt();
-    const std::string& route_number = request_map.at("name").AsString();
+    const string& route_number = request_map.at("name").AsString();
     const auto& bus = catalogue_.FindBus(route_number);
     if (catalogue_.FindBus(route_number) == nullptr) {
-        result["error_message"] = json::Node{ static_cast<std::string>("not found") };
+        result["error_message"] = json::Node{static_cast<string>("not found")};
     }
     else {
-        transport_catalogue::RouteInfo route = catalogue_.GetRouteInfo(bus);
+        domain::RouteInfo route = catalogue_.GetRouteInfo(bus);
         result["curvature"] = route.curvature;
         result["route_length"] = route.route_length;
         result["stop_count"] = static_cast<int>(route.stops_number);
         result["unique_stop_count"] = static_cast<int>(route.unique_stops_number);
     }
-    return json::Node{ result };
+    return json::Node{result};
 }
 
 const json::Node RequestHandler::PrintStop(const json::Dict& request_map) const {
     json::Dict result;
     result["request_id"] = request_map.at("id").AsInt();
-    const std::string& stop_name = request_map.at("name").AsString();
+    const string& stop_name = request_map.at("name").AsString();
     if (catalogue_.FindStop(stop_name) == nullptr) {
-        result["error_message"] = json::Node{ static_cast<std::string>("not found") };
+        result["error_message"] = json::Node{static_cast<string>("not found")};
     }
     else {
-        const std::unordered_set<std::string_view>& buses = catalogue_.GetBusesToStop(stop_name);
-        std::vector<std::string_view> buses_vector(buses.begin(), buses.end());
-        std::sort(buses_vector.begin(), buses_vector.end());
+        const unordered_set<string_view>& buses = catalogue_.GetBusesToStop(stop_name);
+        vector<string_view> buses_vector(buses.begin(), buses.end());
+        sort(buses_vector.begin(), buses_vector.end());
         json::Array buses_arr;
-        for (const std::string_view bus : buses_vector) {
-            buses_arr.push_back(std::string{bus});
+        for (const string_view bus : buses_vector) {
+            buses_arr.push_back(string{bus});
         }
         result["buses"] = buses_arr;
     }
 
-    return json::Node{ result };
+    return json::Node{result};
 }
 
 const json::Node RequestHandler::PrintMap(const json::Dict& request_map) const {
     json::Dict result;
     result["request_id"] = request_map.at("id").AsInt();
-    std::ostringstream strm;
+    ostringstream strm;
     svg::Document map = RenderMap();
     map.Render(strm);
     result["map"] = strm.str();
 
-    return json::Node{ result };
+    return json::Node{result};
 }
 
 svg::Document RequestHandler::RenderMap() const {
-    const std::unordered_map<std::string_view, const transport_catalogue::Bus*>& all_buses = catalogue_.GetAllBuses();
-    std::vector<const transport_catalogue::Stop*> stops;
+    const unordered_map<string_view, const domain::Bus*>& all_buses = catalogue_.GetAllBuses();
+    vector<const domain::Stop*> stops;
     for (const auto& [bus_number, bus] : all_buses) {
-        for (const transport_catalogue::Stop* stop : bus->stops)
+        for (const domain::Stop* stop : bus->stops)
         stops.push_back(stop);
     }
-    std::map<std::string_view, const transport_catalogue::Bus*> sorted_buses;
+    map<string_view, const domain::Bus*> sorted_buses;
     for (const auto& bus : all_buses) {
         sorted_buses.emplace(bus);
     }
