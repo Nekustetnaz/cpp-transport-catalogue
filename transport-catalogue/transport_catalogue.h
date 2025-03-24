@@ -22,10 +22,12 @@ public:
     };
 
     void AddStop(const std::string& name, const geo::Coordinates coordinates);
-    void SetDistance(const std::string_view stop1, const std::string_view stop2, int length);
+    void SetDistance(const std::string_view stop_from, const std::string_view stop_to, int length);
     void AddBus(const std::string& name, const std::vector<std::string_view>& stops, bool is_roundtrip);
+
     const domain::Bus* FindBus(const std::string_view name) const;
     const domain::Stop* FindStop(const std::string_view name) const;
+
     const std::unordered_set<std::string_view>& GetBusesToStop(const std::string_view stop_name) const;
     const domain::RouteInfo GetRouteInfo(const domain::Bus* bus) const;
 

@@ -94,12 +94,12 @@ public:
         : render_settings_(render_settings)
     {}
     
-    std::vector<svg::Polyline> GetRouteLines(const std::map<std::string_view, const domain::Bus*>& buses, const SphereProjector& sp_proj) const;
-    std::vector<svg::Text> GetBusName(const std::map<std::string_view, const domain::Bus*>& buses, const SphereProjector& sp_proj) const;
-    std::vector<svg::Circle> GetStopMarks(std::map<std::string_view, const domain::Stop*>& stops, const SphereProjector& sp_proj) const;
-    std::vector<svg::Text> GetStopNames(std::map<std::string_view, const domain::Stop*>& stops, const SphereProjector& sp_proj) const;
+    std::vector<svg::Polyline> RenderRouteLines(const std::map<std::string_view, const domain::Bus*>& buses, const SphereProjector& sp_proj) const;
+    std::vector<svg::Text> RenderBusName(const std::map<std::string_view, const domain::Bus*>& buses, const SphereProjector& sp_proj) const;
+    std::vector<svg::Circle> RenderStopMarks(std::map<std::string_view, const domain::Stop*>& stops, const SphereProjector& sp_proj) const;
+    std::vector<svg::Text> RenderStopNames(std::map<std::string_view, const domain::Stop*>& stops, const SphereProjector& sp_proj) const;
     
-    svg::Document GetSVG(const std::vector<const domain::Stop*>& stops, const std::map<std::string_view, const domain::Bus*>& buses) const;
+    svg::Document CreateSVG(const std::vector<const domain::Stop*>& stops, const std::map<std::string_view, const domain::Bus*>& buses) const;
     
 private:
     const RenderSettings render_settings_;

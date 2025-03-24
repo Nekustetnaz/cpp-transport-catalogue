@@ -17,8 +17,8 @@ void TransportCatalogue::AddStop(const string& name, const geo::Coordinates coor
 }
 
 
-void TransportCatalogue::SetDistance(const string_view stop1, const string_view stop2, int length) {
-    stop_route_length_.insert({{name_to_stop_.at(stop1), name_to_stop_.at(stop2)}, length});
+void TransportCatalogue::SetDistance(const string_view stop_from, const string_view stop_to, int length) {
+    stop_route_length_.insert({{name_to_stop_.at(stop_from), name_to_stop_.at(stop_to)}, length});
 }
 
 void TransportCatalogue::AddBus(const string& name, const vector<string_view>& stops, bool is_roundtrip) {

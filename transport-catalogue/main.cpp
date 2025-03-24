@@ -12,5 +12,5 @@ int main() {
 
     RequestHandler handler(renderer, catalogue);
 
-    handler.ProcessRequests(stat_requests);
+    requests.ProcessStatRequests(stat_requests, handler);
 }

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "json.h"
-#include "json_reader.h"
 #include "map_renderer.h"
 #include "svg.h"
 #include "transport_catalogue.h"
@@ -15,11 +13,11 @@ public:
     {
     }
 
-    void ProcessRequests(const json::Node& stat_requests) const;
-    
-    const json::Node PrintBus(const json::Dict& request_map) const;
-    const json::Node PrintStop(const json::Dict& request_map) const;
-    const json::Node PrintMap(const json::Dict& request_map) const;
+    bool IsBusExists(std::string_view bus_name) const;
+    bool IsStopExists(std::string_view stop_name) const;
+
+    const domain::RouteInfo GetRoute(std::string_view bus_name) const;
+    const std::vector<std::string_view> GetBuses(std::string_view stop_name) const;
  
     svg::Document RenderMap() const;
 

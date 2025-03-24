@@ -6,72 +6,24 @@
 
 using namespace std;
 
-void RequestHandler::ProcessRequests(const json::Node& stat_requests) const {
-    json::Array result;
-    for (auto& request : stat_requests.AsArray()) {
-        const auto& request_map = request.AsMap();
-        const auto& type = request_map.at("type").AsString();
-        if (type == "Bus") {
-            result.push_back(PrintBus(request_map).AsMap());
-        }        
-        if (type == "Stop") {
-            result.push_back(PrintStop(request_map).AsMap());
-        }
-        if (type == "Map") {
-            result.push_back(PrintMap(request_map).AsMap());
-        }
-    }
-    json::Print(json::Document{result}, cout);
+bool RequestHandler::IsBusExists(std::string_view bus_name) const {
+    return catalogue_.FindBus(bus_name);
 }
 
-const json::Node RequestHandler::PrintBus(const json::Dict& request_map) const {
-    json::Dict result;
-    result["request_id"] = request_map.at("id").AsInt();
-    const string& route_number = request_map.at("name").AsString();
-    const auto& bus = catalogue_.FindBus(route_number);
-    if (catalogue_.FindBus(route_number) == nullptr) {
-        result["error_message"] = json::Node{static_cast<string>("not found")};
-    }
-    else {
-        domain::RouteInfo route = catalogue_.GetRouteInfo(bus);
-        result["curvature"] = route.curvature;
-        result["route_length"] = route.route_length;
-        result["stop_count"] = static_cast<int>(route.stops_number);
-        result["unique_stop_count"] = static_cast<int>(route.unique_stops_number);
-    }
-    return json::Node{result};
+bool RequestHandler::IsStopExists(std::string_view stop_name) const {
+    return catalogue_.FindStop(stop_name);
 }
 
-const json::Node RequestHandler::PrintStop(const json::Dict& request_map) const {
-    json::Dict result;
-    result["request_id"] = request_map.at("id").AsInt();
-    const string& stop_name = request_map.at("name").AsString();
-    if (catalogue_.FindStop(stop_name) == nullptr) {
-        result["error_message"] = json::Node{static_cast<string>("not found")};
-    }
-    else {
-        const unordered_set<string_view>& buses = catalogue_.GetBusesToStop(stop_name);
-        vector<string_view> buses_vector(buses.begin(), buses.end());
-        sort(buses_vector.begin(), buses_vector.end());
-        json::Array buses_arr;
-        for (const string_view bus : buses_vector) {
-            buses_arr.push_back(string{bus});
-        }
-        result["buses"] = buses_arr;
-    }
-
-    return json::Node{result};
+const domain::RouteInfo RequestHandler::GetRoute(std::string_view bus_name) const {
+    const auto& bus = catalogue_.FindBus(bus_name);
+    return catalogue_.GetRouteInfo(bus);
 }
 
-const json::Node RequestHandler::PrintMap(const json::Dict& request_map) const {
-    json::Dict result;
-    result["request_id"] = request_map.at("id").AsInt();
-    ostringstream strm;
-    svg::Document map = RenderMap();
-    map.Render(strm);
-    result["map"] = strm.str();
-
-    return json::Node{result};
+const std::vector<std::string_view> RequestHandler::GetBuses(std::string_view stop_name) const {
+    const unordered_set<string_view>& buses = catalogue_.GetBusesToStop(stop_name);
+    vector<string_view> buses_vector(buses.begin(), buses.end());
+    sort(buses_vector.begin(), buses_vector.end());
+    return buses_vector;  
 }
 
 svg::Document RequestHandler::RenderMap() const {
@@ -86,5 +38,5 @@ svg::Document RequestHandler::RenderMap() const {
         sorted_buses.emplace(bus);
     }
 
-    return renderer_.GetSVG(stops, sorted_buses);
+    return renderer_.CreateSVG(stops, sorted_buses);
 }

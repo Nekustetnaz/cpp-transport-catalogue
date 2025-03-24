@@ -10,7 +10,7 @@ bool IsZero(double value) {
     return abs(value) < EPSILON;
 }
 
-vector<svg::Polyline> MapRenderer::GetRouteLines(const map<string_view, const domain::Bus*>& buses, const SphereProjector& sp) const {
+vector<svg::Polyline> MapRenderer::RenderRouteLines(const map<string_view, const domain::Bus*>& buses, const SphereProjector& sp) const {
     vector<svg::Polyline> result;
     size_t color = 0;
     for (const auto& [bus_name, bus] : buses) {
@@ -40,7 +40,7 @@ vector<svg::Polyline> MapRenderer::GetRouteLines(const map<string_view, const do
     return result;
 }
 
-vector<svg::Text> MapRenderer::GetBusName(const map<string_view, const domain::Bus*>& buses, const SphereProjector& sp) const {
+vector<svg::Text> MapRenderer::RenderBusName(const map<string_view, const domain::Bus*>& buses, const SphereProjector& sp) const {
     vector<svg::Text> result;
     size_t color_num = 0;
     svg::Text text;
@@ -94,7 +94,7 @@ vector<svg::Text> MapRenderer::GetBusName(const map<string_view, const domain::B
     return result;
 }
 
-vector<svg::Circle> MapRenderer::GetStopMarks(map<string_view, const domain::Stop*>& stops, const SphereProjector& sp) const {
+vector<svg::Circle> MapRenderer::RenderStopMarks(map<string_view, const domain::Stop*>& stops, const SphereProjector& sp) const {
     vector<svg::Circle> result;
     for (const auto& [stop_name, stop] : stops) {
         svg::Circle symbol;
@@ -107,7 +107,7 @@ vector<svg::Circle> MapRenderer::GetStopMarks(map<string_view, const domain::Sto
     return result;
 }
 
-vector<svg::Text> MapRenderer::GetStopNames(map<string_view, const domain::Stop*>& stops, const SphereProjector& sp) const {
+vector<svg::Text> MapRenderer::RenderStopNames(map<string_view, const domain::Stop*>& stops, const SphereProjector& sp) const {
     vector<svg::Text> result;
     svg::Text text;
     svg::Text underlayer;
@@ -138,7 +138,7 @@ vector<svg::Text> MapRenderer::GetStopNames(map<string_view, const domain::Stop*
     return result;
 }
 
-svg::Document MapRenderer::GetSVG(const vector<const domain::Stop*>& stops, const map<string_view, const domain::Bus*>& buses) const {
+svg::Document MapRenderer::CreateSVG(const vector<const domain::Stop*>& stops, const map<string_view, const domain::Bus*>& buses) const {
     svg::Document result;
     vector<geo::Coordinates> stops_coord;
     map<string_view, const domain::Stop*> sorted_stops;
@@ -148,16 +148,16 @@ svg::Document MapRenderer::GetSVG(const vector<const domain::Stop*>& stops, cons
         sorted_stops.insert({stop->name, stop});
     }
     SphereProjector sp_proj(stops_coord.begin(), stops_coord.end(), render_settings_.width, render_settings_.height, render_settings_.padding);
-    for (const auto& line : GetRouteLines(buses, sp_proj)) {
+    for (const auto& line : RenderRouteLines(buses, sp_proj)) {
         result.Add(line);
     }
-    for (const auto& bus_name : GetBusName(buses, sp_proj)) {
+    for (const auto& bus_name : RenderBusName(buses, sp_proj)) {
         result.Add(bus_name);
     }
-    for (const auto& stop_mark : GetStopMarks(sorted_stops, sp_proj)) {
+    for (const auto& stop_mark : RenderStopMarks(sorted_stops, sp_proj)) {
         result.Add(stop_mark);
     }
-    for (const auto& stop_name : GetStopNames(sorted_stops, sp_proj)) {
+    for (const auto& stop_name : RenderStopNames(sorted_stops, sp_proj)) {
         result.Add(stop_name);
     }
     return result;
