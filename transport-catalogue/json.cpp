@@ -146,7 +146,6 @@ Node LoadNumber(std::istream& input) {
     if (input.peek() == '-') {
         read_char();
     }
-
     if (input.peek() == '0') {
         read_char();
     } else {

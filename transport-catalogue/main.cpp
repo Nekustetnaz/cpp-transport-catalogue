@@ -7,7 +7,7 @@ int main() {
     requests.PopulateCatalogue(catalogue);
 
     const auto& stat_requests = requests.GetStatRequests();
-    const auto& render_settings = requests.GetRenderSettings().AsMap();
+    const auto& render_settings = requests.GetRenderSettings().AsDict();
     const auto& renderer = requests.FillRenderSettings(render_settings);
 
     RequestHandler handler(renderer, catalogue);

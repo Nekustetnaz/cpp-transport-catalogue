@@ -1,6 +1,6 @@
 #pragma once
 
-#include "json.h"
+#include "json_builder.h"
 #include "map_renderer.h"
 #include "request_handler.h"
 #include "transport_catalogue.h"
@@ -38,4 +38,6 @@ private:
     void PopulateBus(const json::Array& base_requests_arr, transport_catalogue::TransportCatalogue& catalogue) const;
 
     std::variant<std::monostate, std::string, svg::Rgb, svg::Rgba> ParseColor(const json::Node& color_node) const;
+
+    const json::Node PrintNotFoundError(const int request_id) const;
 };
