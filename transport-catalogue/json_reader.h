@@ -4,6 +4,7 @@
 #include "map_renderer.h"
 #include "request_handler.h"
 #include "transport_catalogue.h"
+#include "transport_router.h"
 
 #include <iostream>
 
@@ -16,14 +17,20 @@ public:
     const json::Node& GetBaseRequests() const;
     const json::Node& GetStatRequests() const;
     const json::Node& GetRenderSettings() const;
+    const json::Node& GetRoutingSettings() const;
 
     void PopulateCatalogue(transport_catalogue::TransportCatalogue& catalogue);
     map_renderer::MapRenderer FillRenderSettings(const json::Dict& request_map) const;
+    transport_router::TransportRouter FillRoutingSettings(
+        const json::Dict& request_map
+        , const transport_catalogue::TransportCatalogue& catalogue
+        ) const;
 
     void ProcessStatRequests(const json::Node& stat_requests, const RequestHandler& handler) const;
     const json::Node PrintBus(const json::Dict& request_map, const RequestHandler& handler) const;
     const json::Node PrintStop(const json::Dict& request_map, const RequestHandler& handler) const;
     const json::Node PrintMap(const json::Dict& request_map, const RequestHandler& handler) const;
+    const json::Node PrintBestRoute(const json::Dict& request_map, const RequestHandler& handler) const;
 
 private:
     json::Document input_;

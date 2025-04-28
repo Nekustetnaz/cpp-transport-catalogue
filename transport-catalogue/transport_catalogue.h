@@ -27,6 +27,7 @@ public:
 
     const domain::Bus* FindBus(const std::string_view name) const;
     const domain::Stop* FindStop(const std::string_view name) const;
+    int GetDistance(const domain::Stop* stop_from, const domain::Stop* stop_to) const;
 
     const std::unordered_set<std::string_view>& GetBusesToStop(const std::string_view stop_name) const;
     const domain::RouteInfo GetRouteInfo(const domain::Bus* bus) const;

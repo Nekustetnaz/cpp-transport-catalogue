@@ -21,6 +21,18 @@ void TransportCatalogue::SetDistance(const string_view stop_from, const string_v
     stop_route_length_.insert({{name_to_stop_.at(stop_from), name_to_stop_.at(stop_to)}, length});
 }
 
+int TransportCatalogue::GetDistance(const domain::Stop* stop_from, const domain::Stop* stop_to) const {
+    auto stops_iter = stop_route_length_.find({ stop_from, stop_to });
+    if (stops_iter != stop_route_length_.end()) {
+        return stops_iter->second;
+    }
+    auto stops_iter_revert = stop_route_length_.find({ stop_to, stop_from });
+    if (stops_iter_revert != stop_route_length_.end()) {
+        return stops_iter_revert->second;
+    }
+    return 0;
+}
+
 void TransportCatalogue::AddBus(const string& name, const vector<string_view>& stops, bool is_roundtrip) {
     vector<const Stop*> bus_stops;
     for (const string_view stop : stops) {

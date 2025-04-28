@@ -20,6 +20,11 @@ const json::Node& JsonReader::GetRenderSettings() const {
     return rs_iter != input_.GetRoot().AsDict().end() ? rs_iter -> second : dummy_;
 }
 
+const json::Node& JsonReader::GetRoutingSettings() const {
+    auto rs_iter = input_.GetRoot().AsDict().find("routing_settings");
+    return rs_iter != input_.GetRoot().AsDict().end() ? rs_iter -> second : dummy_;
+}
+
 void JsonReader::PopulateCatalogue(transport_catalogue::TransportCatalogue& catalogue) {
     const json::Array& base_requests_arr = GetBaseRequests().AsArray();
     PopulateStop(base_requests_arr, catalogue);  
@@ -135,6 +140,16 @@ map_renderer::MapRenderer JsonReader::FillRenderSettings(const json::Dict& reque
     return render_settings;
 }
 
+transport_router::TransportRouter JsonReader::FillRoutingSettings(
+    const json::Dict& request_map
+    , const transport_catalogue::TransportCatalogue& catalogue
+    ) const {
+    transport_router::RoutingSettings routing_settings;
+    routing_settings.bus_wait_time = request_map.at("bus_wait_time"s).AsInt();
+    routing_settings.bus_velocity = request_map.at("bus_velocity"s).AsDouble();
+    return {routing_settings, catalogue};
+}
+
 void JsonReader::ProcessStatRequests(const json::Node& stat_requests, const RequestHandler& handler) const {
     json::Array result;
     for (auto& request : stat_requests.AsArray()) {
@@ -149,6 +164,9 @@ void JsonReader::ProcessStatRequests(const json::Node& stat_requests, const Requ
         if (type == "Map") {
             result.push_back(PrintMap(request_map, handler).AsDict());
         }
+        if (type == "Route") {
+            result.push_back(PrintBestRoute(request_map, handler).AsDict());
+        }
     }
     json::Print(json::Document{result}, cout);
 }
@@ -161,7 +179,7 @@ const json::Node JsonReader::PrintBus(const json::Dict& request_map, const Reque
         result = PrintNotFoundError(request_id);
     }
     else {
-        const domain::RouteInfo route = handler.GetRoute(bus_name);
+        const domain::RouteInfo route = handler.GetRouteInfo(bus_name);
         result = json::Builder{}
                         .StartDict()
                             .Key("request_id").Value(request_id)
@@ -219,4 +237,57 @@ const json::Node JsonReader::PrintNotFoundError(const int request_id) const {
                         .Key("error_message").Value("not found")
                     .EndDict()
                 .Build();
+}
+
+const json::Node JsonReader::PrintBestRoute(const json::Dict& request_map, const RequestHandler& handler) const {
+    json::Node result;
+    const int request_id = request_map.at("id"s).AsInt();
+    const string_view stop_from = request_map.at("from"s).AsString();
+    const string_view stop_to = request_map.at("to"s).AsString();
+    const auto& route = handler.GetBestRoute(stop_from, stop_to);
+    
+    if (!route) {
+        result = PrintNotFoundError(request_id);
+    }
+    else {
+        json::Array items;
+        double total_time = 0.0;
+        items.reserve(route.value().edges.size());
+        for (auto& edge_id : route.value().edges) {
+            const graph::Edge<double> edge = handler.GetRouteGraph().GetEdge(edge_id);
+            if (edge.quality == 0) {
+                items.emplace_back(json::Node(json::Builder{}
+                    .StartDict()
+                        .Key("stop_name"s).Value(edge.name)
+                        .Key("time"s).Value(edge.weight)
+                        .Key("type"s).Value("Wait"s)
+                    .EndDict()
+                .Build()));
+
+                total_time += edge.weight;
+            }
+            else {
+                items.emplace_back(json::Node(json::Builder{}
+                    .StartDict()
+                        .Key("bus"s).Value(edge.name)
+                        .Key("span_count"s).Value(static_cast<int>(edge.quality))
+                        .Key("time"s).Value(edge.weight)
+                        .Key("type"s).Value("Bus"s)
+                    .EndDict()
+                .Build()));
+
+                total_time += edge.weight;
+            }
+        }
+
+        result = json::Builder{}
+            .StartDict()
+                .Key("request_id"s).Value(request_id)
+                .Key("total_time"s).Value(total_time)
+                .Key("items"s).Value(items)
+            .EndDict()
+        .Build();
+    }
+
+    return result;
 }

@@ -14,7 +14,7 @@ bool RequestHandler::IsStopExists(std::string_view stop_name) const {
     return catalogue_.FindStop(stop_name);
 }
 
-const domain::RouteInfo RequestHandler::GetRoute(std::string_view bus_name) const {
+const domain::RouteInfo RequestHandler::GetRouteInfo(std::string_view bus_name) const {
     const auto& bus = catalogue_.FindBus(bus_name);
     return catalogue_.GetRouteInfo(bus);
 }
@@ -39,4 +39,15 @@ svg::Document RequestHandler::RenderMap() const {
     }
 
     return renderer_.CreateSVG(stops, sorted_buses);
+}
+
+const std::optional<graph::Router<double>::RouteInfo> RequestHandler::GetBestRoute(
+    string_view stop_from
+    , std::string_view stop_to
+    ) const {
+    return router_.GetRoute(stop_from, stop_to);
+}
+
+const graph::DirectedWeightedGraph<double>& RequestHandler::GetRouteGraph() const {
+    return router_.GetGraph();
 }
