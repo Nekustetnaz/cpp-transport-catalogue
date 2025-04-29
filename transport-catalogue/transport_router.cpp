@@ -2,26 +2,24 @@
 
 namespace transport_router {
 
-const std::optional<graph::Router<double>::RouteInfo> TransportRouter::GetRoute(
-    const std::string_view stop_from
-    , const std::string_view stop_to
-    ) const {
-	return router_->BuildRoute(stop_ids_.at(std::string(stop_from)),stop_ids_.at(std::string(stop_to)));
+const std::optional<std::vector<const graph::Edge<double>*>> TransportRouter::GetRoute(
+    const std::string_view stop_from, const std::string_view stop_to) const {
+    const auto& route_info = router_->BuildRoute(stop_ids_.at(std::string(stop_from)),stop_ids_.at(std::string(stop_to)));
+    if (!route_info) {
+        return std::nullopt;
+    }
+    std::vector<const graph::Edge<double>*> route;
+    route.reserve(route_info.value().edges.size());
+    for (graph::EdgeId edge_id : route_info.value().edges) {
+        route.emplace_back(&graph_.GetEdge(edge_id));
+    }    
+	return route;
 }
 
-const graph::DirectedWeightedGraph<double>& TransportRouter::GetGraph() const {
-	return graph_;
-}
-
-void TransportRouter::BuildGraph(const transport_catalogue::TransportCatalogue& catalogue) {
-	const auto& all_stops = catalogue.GetAllStops();
-	const auto& all_buses = catalogue.GetAllBuses();
-
-	graph::DirectedWeightedGraph<double> stops_graph(all_stops.size() * 2);
-    std::map<std::string, graph::VertexId> stop_ids;
+void TransportRouter::ProcessAllStops(
+    graph::DirectedWeightedGraph<double>& stops_graph, std::map<std::string, graph::VertexId>& stop_ids) {
     graph::VertexId vertex_id = 0;
-
-    for (const auto& [stop_name, stop_info] : all_stops) {
+    for (const auto& [stop_name, stop_info] : catalogue_.GetAllStops()) {
         stop_ids[stop_info->name] = vertex_id;
         stops_graph.AddEdge({
                 stop_info->name,
@@ -32,9 +30,10 @@ void TransportRouter::BuildGraph(const transport_catalogue::TransportCatalogue& 
             });
         vertex_id += 2;
     }
-    stop_ids_ = std::move(stop_ids);
+}
 
-    for (const auto& [bus_name, bus_info] : all_buses) {
+void TransportRouter::ProcessAllBuses(graph::DirectedWeightedGraph<double>& stops_graph) {
+    for (const auto& [bus_name, bus_info] : catalogue_.GetAllBuses()) {
         const auto& stops = bus_info->stops;
         const size_t stops_count = stops.size();
 
@@ -46,11 +45,11 @@ void TransportRouter::BuildGraph(const transport_catalogue::TransportCatalogue& 
                 int forward_distance = 0;
                 int reverse_distance = 0; 
                 for (size_t k = i + 1; k <= j; ++k) {
-                    forward_distance += catalogue.GetDistance(stops[k - 1], stops[k]);
-                    reverse_distance += catalogue.GetDistance(stops[k], stops[k - 1]);
+                    forward_distance += catalogue_.GetDistance(stops[k - 1], stops[k]);
+                    reverse_distance += catalogue_.GetDistance(stops[k], stops[k - 1]);
                 }
 
-                const double velocity_factor = routing_settings_.bus_velocity * (100.0 / 6.0);
+                const double velocity_factor = routing_settings_.bus_velocity * routing_settings_.KMH_TO_METERS_PER_MIN;
                 const double travel_time = static_cast<double>(forward_distance) / velocity_factor;  
 
                 stops_graph.AddEdge({
@@ -74,6 +73,16 @@ void TransportRouter::BuildGraph(const transport_catalogue::TransportCatalogue& 
             }
         }
     }
+}
+
+void TransportRouter::BuildGraph() {
+    graph::DirectedWeightedGraph<double> stops_graph(catalogue_.GetAllStops().size() * 2);
+    std::map<std::string, graph::VertexId> stop_ids;
+    
+    ProcessAllStops(stops_graph, stop_ids);
+    stop_ids_ = std::move(stop_ids);
+    
+    ProcessAllBuses(stops_graph);
 
     graph_ = std::move(stops_graph);
     router_ = std::make_unique<graph::Router<double>>(graph_);

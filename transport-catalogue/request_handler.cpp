@@ -41,13 +41,7 @@ svg::Document RequestHandler::RenderMap() const {
     return renderer_.CreateSVG(stops, sorted_buses);
 }
 
-const std::optional<graph::Router<double>::RouteInfo> RequestHandler::GetBestRoute(
-    string_view stop_from
-    , std::string_view stop_to
-    ) const {
+const std::optional<vector<const graph::Edge<double>*>> RequestHandler::GetBestRoute(
+    string_view stop_from, std::string_view stop_to) const {
     return router_.GetRoute(stop_from, stop_to);
-}
-
-const graph::DirectedWeightedGraph<double>& RequestHandler::GetRouteGraph() const {
-    return router_.GetGraph();
 }

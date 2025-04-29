@@ -25,11 +25,8 @@ public:
     const domain::RouteInfo GetRouteInfo(std::string_view bus_name) const;
     const std::vector<std::string_view> GetBuses(std::string_view stop_name) const;
 
-    const std::optional<graph::Router<double>::RouteInfo> GetBestRoute(
-        std::string_view stop_from
-        , std::string_view stop_to
-        ) const;
-    const graph::DirectedWeightedGraph<double>& GetRouteGraph() const;
+    const std::optional<std::vector<const graph::Edge<double>*>> GetBestRoute(
+        std::string_view stop_from, std::string_view stop_to) const;
  
     svg::Document RenderMap() const;
 

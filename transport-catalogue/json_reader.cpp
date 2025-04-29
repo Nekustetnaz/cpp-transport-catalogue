@@ -252,31 +252,31 @@ const json::Node JsonReader::PrintBestRoute(const json::Dict& request_map, const
     else {
         json::Array items;
         double total_time = 0.0;
-        items.reserve(route.value().edges.size());
-        for (auto& edge_id : route.value().edges) {
-            const graph::Edge<double> edge = handler.GetRouteGraph().GetEdge(edge_id);
-            if (edge.quality == 0) {
+        items.reserve(route.value().size());
+        for (const graph::Edge<double>* edge : route.value()) {
+            if (edge->quality == 0) {
                 items.emplace_back(json::Node(json::Builder{}
                     .StartDict()
-                        .Key("stop_name"s).Value(edge.name)
-                        .Key("time"s).Value(edge.weight)
+                        .Key("stop_name"s).Value(edge->name)
+                        .Key("time"s).Value(edge->weight)
                         .Key("type"s).Value("Wait"s)
                     .EndDict()
                 .Build()));
 
-                total_time += edge.weight;
+                total_time += edge->weight;
             }
+
             else {
                 items.emplace_back(json::Node(json::Builder{}
                     .StartDict()
-                        .Key("bus"s).Value(edge.name)
-                        .Key("span_count"s).Value(static_cast<int>(edge.quality))
-                        .Key("time"s).Value(edge.weight)
+                        .Key("bus"s).Value(edge->name)
+                        .Key("span_count"s).Value(static_cast<int>(edge->quality))
+                        .Key("time"s).Value(edge->weight)
                         .Key("type"s).Value("Bus"s)
                     .EndDict()
                 .Build()));
 
-                total_time += edge.weight;
+                total_time += edge->weight;
             }
         }
 
